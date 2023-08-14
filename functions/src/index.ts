@@ -6,60 +6,78 @@
  *
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
-import * as logger from "firebase-functions/logger";
-import {
-  onDocumentCreated,
-} from "firebase-functions/v2/firestore";
 import {initializeApp} from "firebase-admin/app";
 import {setGlobalOptions} from "firebase-functions/v2/options";
-import {getFirestore} from "firebase-admin/firestore";
-import {getMessaging} from "firebase-admin/messaging";
+import {onThreadCreated} from "./stream/onThreadCreated";
+import {onThreadDeleted} from "./stream/onThreadDeleted";
 
 initializeApp();
 setGlobalOptions({region: "europe-west1"});
 
-exports.notifyOnThreadCreated = onDocumentCreated(
-  "stream/{threadId}",
-  async (event) => {
+exports.onThreadCreated = onThreadCreated;
+exports.onThreadDeleted = onThreadDeleted;
+
+/*
+interface InboxNotification {
+  meta: {
+    new: boolean;
+  };
+}
+/*
+exports.onNotification = onDocumentWritten(
+  "inbox/{userId}", async (event) => {
+    logger.info("onNotification called for: " + event.id);
+
     const messaging = getMessaging();
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
 
-    const subscribers = await getFirestore().collection("subscriptions").where(
-      "notifyOnThreads", "==", true).get();
-
-    const thread = event.data?.data();
-    const threadId = event.data?.id;
-
-    if (!thread) {
+    if (!before || !after) {
       throw new Error(
-        "Trying to send notification for non-existing thread");
+        "Trying to send notification for non-existing message");
     }
 
-    const author = await getFirestore().collection("profiles").doc(
-      thread.author).get();
-    const authorData = author.data();
-    const nick = authorData?.nick || "Anonyymi";
+    if (before.read === after.read) {
+      return Promise.resolve();
+    }
 
-    const title = thread.title || "Nimetön";
-    const body = thread.topic ? nick + " loi uuden ketjun aiheessa " +
-      thread.topic : nick + " loi uuden ketjun";
+    // Check if inbox has more unread messages than before
+    const beforeCount = before.notifications.filter(
+      (n: InboxNotification) => !n.meta.new).length;
+    const afterCount = after.notifications.filter(
+      (n: InboxNotification) => !n.meta.new).length;
 
-    subscribers.forEach((subscriber) => {
-      logger.info("Sending notification to: " + subscriber.id);
-      subscriber.data().messagingTokens.forEach((token: string) => {
-        logger.info("Sending notification to token: " + token);
-        messaging.send({
-          token: token,
-          notification: {
-            title,
-            body,
-          },
-          data: {
-            threadId: threadId || "",
-            url: `https://pelilauta.web.app/threads/${threadId}`,
-          },
-        });
+    logger.info("Before: " + beforeCount + ", after: " + afterCount);
+
+    // No new notifications, the user likely marked a notification as read
+    if (beforeCount >= afterCount) {
+      return Promise.resolve();
+    }
+
+    // Send the afterCount as a notification
+    const subscription = await getFirestore().collection(
+      "subscriptions").doc(event.id).get();
+
+    const subData = subscription.data();
+
+    // User has disabled push notifications
+    if (!subscription.exists || !subData) {
+      return Promise.resolve();
+    }
+
+    // Send the notification to all tokens of the user
+    subData.messagingTokens.forEach((token: string) => {
+      logger.info("Sending notification to token: " + token);
+      messaging.send({
+        token: token,
+        notification: {
+          title: "Pelilauta",
+          body: "Uusia ilmoituksia (" + afterCount + ")",
+        },
+        data: {
+          url: "https://pelilauta.web.app/inbox",
+        },
       });
     });
-    logger.info("Sent notifications for new thread: " + threadId);
-    return Promise.resolve();
   });
+  */
