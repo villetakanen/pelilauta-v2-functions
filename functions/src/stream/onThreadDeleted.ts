@@ -11,8 +11,10 @@ import {
 } from "firebase-functions/v2/firestore";
 
 import {metaStreamInfo} from "./onThreadCreated";
+import {setGlobalOptions} from "firebase-functions/v2/options";
 
 const FIRESTORE_PATH = "stream/{threadId}";
+setGlobalOptions({region: "europe-west1"});
 
 /**
  * Reduces the count of the topic in meta collection

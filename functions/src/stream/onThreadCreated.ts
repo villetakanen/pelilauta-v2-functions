@@ -14,10 +14,13 @@ import {
   onDocumentCreated,
 } from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
+import {setGlobalOptions} from "firebase-functions/v2/options";
 
 const FIRESTORE_PATH = "stream/{threadId}";
 const DEFAULT_TOPIC = "Yleinen";
 const DEFAULT_ICON = "Adventurer";
+
+setGlobalOptions({region: "europe-west1"});
 
 export type metaStreamInfo = {
   slug: string,
@@ -73,13 +76,17 @@ async function updateStats(
 async function notifyOnThreadCreated(
   event: FirestoreEvent<QueryDocumentSnapshot | undefined,
   {threadId: string}>) {
+  const thread = event.data?.data();
+  const threadId = event.data?.id;
   const messaging = getMessaging();
 
   const subscribers = await getFirestore().collection("subscriptions").where(
     "notifyOnThreads", "==", true).get();
 
-  const thread = event.data?.data();
-  const threadId = event.data?.id;
+  if (!subscribers || subscribers.empty) {
+    logger.info("No subscribers found for new thread: " + threadId);
+    return Promise.resolve();
+  }
 
   if (!thread) {
     throw new Error(
@@ -97,17 +104,29 @@ async function notifyOnThreadCreated(
 
   subscribers.forEach((subscriber) => {
     logger.info("Sending notification to: " + subscriber.id);
+    if (subscriber.id === thread.author) {
+      logger.info("Skipping notification to author themself: " + subscriber.id);
+      return;
+    }
+    if (!subscriber.data().messagingTokens) {
+      logger.info("Skipping notification to: " + subscriber.id +
+        " as they have no messagingTokens");
+      return;
+    }
     subscriber.data().messagingTokens.forEach((token: string) => {
       logger.info("Sending notification to token: " + token);
       messaging.send({
         token: token,
-        notification: {
+        /* notification: {
           title,
           body,
-        },
+        }, */
         data: {
           threadId: threadId || "",
           url: `https://pelilauta.web.app/threads/${threadId}`,
+          icon: "https://pelilauta.web.app/proprietary/icons/dark/fox.svg",
+          title,
+          body,
         },
       });
     });
