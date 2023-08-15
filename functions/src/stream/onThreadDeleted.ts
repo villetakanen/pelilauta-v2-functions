@@ -26,18 +26,15 @@ async function updateStats(
 
   const statsRef = getFirestore().collection("meta").doc("pelilauta");
   const stats = await statsRef.get();
-  const topicArray:Array<metaStreamInfo> = stats.data()?.streams || [];
+  const streams = stats.data()?.streams || {};
 
-  // Find the index of the topic
-  const topicIndex = topicArray.findIndex(
-    (topicObject: metaStreamInfo) => topicObject.slug === topic);
-
-  if (topicIndex > -1) {
-    topicArray[topicIndex].count -= 1;
+  if (streams[topic]) {
+    const streamInfo = streams[topic] as metaStreamInfo;
+    streamInfo.count = streamInfo.count ? streamInfo.count - 1 : 0;
   }
 
   await statsRef.update({
-    streams: topicArray,
+    streams,
   });
 }
 

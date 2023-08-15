@@ -43,29 +43,25 @@ async function updateStats(
 
   const stats = await statsRef.get();
 
-  const topicArray:Array<metaStreamInfo> = stats.data()?.streams || [];
+  const streams = stats.data()?.streams || {};
 
   // Find the index of the topic
-  const topicIndex = topicArray.findIndex(
-    (topicObject: metaStreamInfo) => topicObject.slug === topic);
+  const stream:metaStreamInfo = streams[topic] || {
+    slug: topic,
+    count: 0,
+    icon: DEFAULT_ICON,
+    description: "",
+    order: -1,
+    name: topic,
+  };
 
-  // If topic is not found, add it to the array
-  if (topicIndex === -1) {
-    topicArray.push({
-      slug: topic,
-      count: 1,
-      icon: DEFAULT_ICON,
-      description: "",
-      order: -1,
-      name: topic,
-    });
-  } else {
-    // If topic is found, increment the count
-    topicArray[topicIndex].count++;
-  }
+  // Update the count
+  stream.count += 1;
+
+  streams[topic] = stream;
 
   // Update the stats
-  await statsRef.update({topics: topicArray});
+  await statsRef.update({streams});
 }
 
 /**
