@@ -10,12 +10,16 @@ import {initializeApp} from "firebase-admin/app";
 import {setGlobalOptions} from "firebase-functions/v2/options";
 import {onThreadCreated} from "./stream/onThreadCreated";
 import {onThreadDeleted} from "./stream/onThreadDeleted";
+import {onProfileReactionCreated} from "./profile/onProfileReactionCreated";
+import {onNotificationCreated} from "./inbox/onNotificationCreated";
 
 initializeApp();
 setGlobalOptions({region: "europe-west1"});
 
 exports.onThreadCreated = onThreadCreated;
 exports.onThreadDeleted = onThreadDeleted;
+exports.onProfileReactionCreated = onProfileReactionCreated;
+exports.onNotificationCreated = onNotificationCreated;
 
 /*
 interface InboxNotification {

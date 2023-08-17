@@ -208,7 +208,7 @@ async function handleReplyReaction(data: DocumentData, from: string) {
   });
 }
 
-export const onProfileReactionCreate = onDocumentCreated(
+export const onProfileReactionCreated = onDocumentCreated(
   FIRESTORE_PATH,
   async (event) => {
     const data = event.data?.data();

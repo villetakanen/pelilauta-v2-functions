@@ -89,7 +89,7 @@ async function notifyOnCreated(
 }
 
 
-export const onThreadCreated = onDocumentCreated(
+export const onNotificationCreated = onDocumentCreated(
   FIRESTORE_PATH,
   async (event) => {
     await notifyOnCreated(event);
