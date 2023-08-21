@@ -26,7 +26,7 @@ import {
 import * as logger from "firebase-functions/logger";
 import {setGlobalOptions} from "firebase-functions/v2/options";
 
-const FIRESTORE_PATH = "notification/{notificationId}";
+const FIRESTORE_PATH = "notifications/{notificationId}";
 
 setGlobalOptions({region: "europe-west1"});
 
