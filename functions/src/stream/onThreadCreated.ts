@@ -96,11 +96,10 @@ async function notifyOnThreadCreated(
   const author = await getFirestore().collection("profiles").doc(
     thread.author).get();
   const authorData = author.data();
-  const nick = authorData?.nick || "Anonyymi";
+  const from = authorData?.nick || "Anonyymi";
 
   const title = thread.title || "Nimetön";
-  const body = thread.topic ? nick + " loi uuden ketjun aiheessa " +
-        thread.topic : nick + " loi uuden ketjun";
+  const body = "thread.created";
 
   subscribers.forEach((subscriber) => {
     logger.info("Sending notification to: " + subscriber.id);
@@ -127,6 +126,7 @@ async function notifyOnThreadCreated(
           icon: "https://pelilauta.web.app/proprietary/icons/dark/fox.svg",
           title,
           body,
+          from,
         },
       });
     });

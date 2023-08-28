@@ -61,27 +61,23 @@ async function notifyOnCreated(
   }
 
   if (subscriptionData.notifyOnLikes) {
-    const title = "Uusi reaktio";
+    const title = notification?.targetType || "notification";
     const fromDoc = await db.collection(
       "profiles").doc(notification?.from).get();
     const from = fromDoc.data()?.nick || "Anonyymi";
-    const target = notification?.targetType.split(
-      ".")[0] === "reply" ? "vastauksen" : "sivuston";
-    const body = `${from} merkitsi ${target}`;
+    const body = notification?.message || "...";
 
+    // Send the notification to the user
     const tokens = subscriptionData.messagingTokens || [];
     tokens.forEach((token: string) => {
       messaging.send({
         token: token,
-        /* notification: {
-          title,
-          body,
-        }, */
         data: {
           url: "https://pelilauta.web.app/inbox",
           icon: "https://pelilauta.web.app/proprietary/icons/dark/send.svg",
           title,
           body,
+          from,
         },
       });
     });
