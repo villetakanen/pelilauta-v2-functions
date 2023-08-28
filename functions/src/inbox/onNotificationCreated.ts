@@ -64,7 +64,7 @@ async function notifyOnCreated(
     const title = notification?.targetType || "notification";
     const fromDoc = await db.collection(
       "profiles").doc(notification?.from).get();
-    const from = fromDoc.data()?.nick || "Anonyymi";
+    const author = fromDoc.data()?.nick || "Anonyymi";
     const body = notification?.message || "...";
 
     // Send the notification to the user
@@ -77,7 +77,7 @@ async function notifyOnCreated(
           icon: "https://pelilauta.web.app/proprietary/icons/dark/send.svg",
           title,
           body,
-          from,
+          author,
         },
       });
     });
