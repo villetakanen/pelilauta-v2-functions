@@ -6,20 +6,25 @@
  *
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
+initializeApp();
+setGlobalOptions({region: "europe-west1"});
+
 import {initializeApp} from "firebase-admin/app";
 import {setGlobalOptions} from "firebase-functions/v2/options";
 import {onThreadCreated} from "./stream/onThreadCreated";
 import {onThreadDeleted} from "./stream/onThreadDeleted";
 import {onProfileReactionCreated} from "./profile/onProfileReactionCreated";
 import {onNotificationCreated} from "./inbox/onNotificationCreated";
-
-initializeApp();
-setGlobalOptions({region: "europe-west1"});
+import {onReplyToThreadCreated} from "./discussion/onReplyToThreadCreated";
+import {onReplyToThreadDeleted} from "./discussion/onReplyToThreadDeleted";
 
 exports.onThreadCreated = onThreadCreated;
 exports.onThreadDeleted = onThreadDeleted;
 exports.onProfileReactionCreated = onProfileReactionCreated;
 exports.onNotificationCreated = onNotificationCreated;
+exports.onReplyToThreadCreated = onReplyToThreadCreated;
+exports.onReplyToThreadDeleted = onReplyToThreadDeleted;
+
 
 /*
 interface InboxNotification {
